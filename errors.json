@@ -1,0 +1,10 @@
+{
+    "commands": {
+        "notImplemented": "Not Implemented",
+        "minArgLimit": "There is not enough arguments",
+        "maxArgLimit": "There are too many arguments",
+        "permissionError": "You do not have permission to use this",
+        "dmDisabled": "This command cannot be run in a DM",
+        "blacklistedUser": "You have been blocked from this command"
+    }
+}

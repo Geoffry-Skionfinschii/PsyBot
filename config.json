@@ -1,0 +1,9 @@
+{
+    "database": {
+        "storageDir": "./database/",
+        "saveDelay": 60,
+        "backupPrefix": "~"
+    },
+    "owner": "139325032932311040",
+    "prefix": "["
+}
