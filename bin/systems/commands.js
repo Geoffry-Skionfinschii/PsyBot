@@ -27,13 +27,12 @@ class CommandSystem extends DefaultSystem {
     }
 
     _loadCommands() {
-        let relDir = './bin/systems/commands/'
-        let cmds = fs.readdirSync(relDir);
+        let cmds = fs.readdirSync('./bin/systems/commands'); //Relative to master
         cmds.forEach((file) => {
             if(file.substr(file.length - 3) == ".js") {
-                let cmdClass = require(relDir + file);
+                let cmdClass = require('./commands/' + file); //relative to script
                 let cmd = new cmdClass(this._manager);
-                cmd.preinit(this);
+                cmd.preinit();
                 Utils.log("CommandLoad", `Loaded command ${cmd._name}`);
                 this._commands[cmd._name] = cmd;
             }

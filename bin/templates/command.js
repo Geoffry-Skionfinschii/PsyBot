@@ -16,13 +16,22 @@ class DefaultCommand {
      * @param {CommandProperty} properties 
      * @param {string} name 
      */
-    constructor(mgr, properties, name) {
+    constructor(mgr, properties) {
         this._manager = mgr;
         this._isAlias = false;
         this._aliases = [];
-        this._name = name;
+        this._name = properties._command;
 
         this._properties = properties;
+    }
+
+    preinit() {
+        if(!this._properties._fixedPermissions)
+            this._properties._updatePermissions(this._manager);
+    }
+
+    init() {
+        
     }
 
     //DO NOT OVERRIDE
@@ -182,17 +191,10 @@ class CommandProperty {
         this._useWhitelist = true;
     }
 
-    /**
-     * Must be run at the end of setting up the properties *only* if fixedPermissions is false
-     */
-    finish() {
-        this._updatePermissions();
-    }
-
-    _updatePermissions() {
-        let dbSys = this._manager.getSystem("Database");
+    _updatePermissions(mgr) {
+        let dbSys = mgr.getSystem("Database");
         let dbRet = dbSys.getDatabase("cmd_lists");
-        let db = dbRet._data;
+        let db = dbRet.getData();
         if(db == null) {
             this._whitelist = [];
             Utils.log(`CommandProperty ${this._command}`, "Failed to load whitelist database");

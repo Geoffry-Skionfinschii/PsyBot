@@ -38,7 +38,7 @@ class DatabaseSystem extends DefaultSystem {
     }
 
     commit(table) {
-        this._save(table._name);
+        this._save(table);
     }
 
     _fsConv(table) {
