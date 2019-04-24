@@ -1,7 +1,7 @@
 const Config = require("../../config");
 const ErrorStrings = require("../../errors").commands;
 const Utils = require("../util");
-const ErrorReply = require('../errorreply');
+const {ErrorMessageResponse, NoneMessageResponse} = require('../messageresponse');
 
 //JSDocs
 /**
@@ -31,7 +31,7 @@ class DefaultCommand {
     }
 
     init() {
-        
+
     }
 
     //DO NOT OVERRIDE
@@ -41,13 +41,13 @@ class DefaultCommand {
      * @param {string[]} args 
      */
     exec(message, args) {
-        let resp = checkProperties(message, args);
+        let resp = this.checkProperties(message, args);
         if(resp == true) {
             return this.run(message, args);
         } else if(resp != false) {
-            message.channel.send(ErrorReply.error(resp));
+            return new ErrorMessageResponse(resp);
         }
-        return false;
+        return new NoneMessageResponse();
     }
 
     //User defined.
@@ -151,7 +151,7 @@ class DefaultAlias {
     }
 
     exec(message, args) {
-        this._link.exec(message, args);
+        return this._link.exec(message, args);
     }
 }
 

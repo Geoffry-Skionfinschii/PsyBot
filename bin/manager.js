@@ -4,14 +4,22 @@ const fs = require('fs');
 
 //Implements any classes found in the ./bin/systems folder
 //Systems implement the DefaultSystem class
+/**
+ * @typedef {import('discord.js').Client} DiscordClient
+ */
+
 class Manager extends EventEmitter {
+    /**
+     * 
+     * @param {DiscordClient} client 
+     */
     constructor(client) {
         super();
         this._discordClient = client;
         this._timerManager = null;
         this._discordAlive = false;
         this._firstAlive = null;
-        this._events = ["newSystem"];
+        this._events = ["messageOther"];
 
         this._systems = {};
     }
@@ -25,6 +33,8 @@ class Manager extends EventEmitter {
                 Utils.log("Manager", "Discord Event '" + event + "' was registered.");
             }
         });
+
+        this._initializeEvents();
 
         let systems = fs.readdirSync('./bin/systems'); //Local to master script
 		
@@ -47,6 +57,14 @@ class Manager extends EventEmitter {
             this._systems[sys].postinit();
         }
         Utils.log("Systems", "Post-Intialized All Systems");
+    }
+
+    _initializeEvents() {
+        //MessageOther event, triggers when a message is sent by anyone but itself
+        this._discordClient.on("message", (msg) => {
+            if(msg.author.id != this._discordClient.user.id)
+                this.emit("messageOther", msg);
+        })
     }
 
     discordOn() {

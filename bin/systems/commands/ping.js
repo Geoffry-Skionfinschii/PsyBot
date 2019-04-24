@@ -1,4 +1,5 @@
 const {DefaultCommand,DefaultAlias,CommandProperty} = require('../../templates/command');
+const {SimpleMessageResponse} = require('../../messageresponse');
 
 class PingCommand extends DefaultCommand {
     constructor(mgr) {
@@ -7,8 +8,13 @@ class PingCommand extends DefaultCommand {
         super(mgr, properties);
     }
 
+    init() {
+        let cmdSys = this._manager.getSystem("Commands");
+        cmdSys.registerAlias(new DefaultAlias("poing", this));
+    }
+
     run(message, args) {
-        return "Pong";
+        return new SimpleMessageResponse("Pong");
     }
 }
 
