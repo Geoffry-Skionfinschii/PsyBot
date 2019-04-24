@@ -11,17 +11,17 @@ class TowerCommand extends DefaultCommand {
         super(mgr, properties);
     }
     init() {
-	    let cmdSys = this._manager.getSystem("Commands");
-	    cmdSys.registerAlias(new DefaultAlias("9/11", this))	
+        let cmdSys = this._manager.getSystem("Commands");
+        cmdSys.registerAlias(new DefaultAlias("9/11", this))	
 		
     }
 
     run(message, args) {
-	    let rich = new RichEmbed();
-	    rich.setTitle("Bush did it");
+        let rich = new RichEmbed();
+        rich.setTitle("Bush did it");
         rich.setImage("https://i.ytimg.com/vi/3_MMYI9POc0/maxresdefault.jpg");
         rich.setFooter("I didn't make this, Pyseirn did.");
-	    return new SimpleMessageResponse(rich);
+        return new SimpleMessageResponse(rich);
     }
 }
 
