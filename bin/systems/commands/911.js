@@ -3,7 +3,7 @@ const {SimpleMessageResponse} = require('../../messageresponse');
 const Config = require("../../../config");
 const {RichEmbed} = require("discord.js");
 
-class 911Command extends DefaultCommand {
+class TowerCommand extends DefaultCommand {
     constructor(mgr) {
         let properties = new CommandProperty("911");
         properties.allowDM(true).noArgs().setFixedPermissions(true);
@@ -13,16 +13,16 @@ class 911Command extends DefaultCommand {
 
     init() {
 		let cmdSys = this._manager.getSystem("Commands");
-		cmdSys.registerAlias(new DefaultAlias("name", this))	
+		cmdSys.registerAlias(new DefaultAlias("9/11", this))	
 		
     }
 
     run(message, args) {
 		let rich = new RichEmbed();
 		rich.setTitle("Bush did it");
-		rich.setImage("url");
+		rich.setImage("https://i.ytimg.com/vi/3_MMYI9POc0/maxresdefault.jpg");
 		return new SimpleMessageResponse(rich);
     }
 }
 
-module.exports = 911Command
+module.exports = TowerCommand
