@@ -6,14 +6,11 @@ class PingCommand extends DefaultCommand {
     constructor(mgr) {
         let properties = new CommandProperty("ping");
         properties.allowDM(true).noArgs().setFixedPermissions(true);
-        properties.forceWhitelist(true);
-        properties.addWhitelist("user", Config.owner);
-        properties.addBlacklist("channel", "568294324165672971");
+        properties.forceWhitelist(false);
         super(mgr, properties);
     }
 
     init() {
-        let cmdSys = this._manager.getSystem("Commands");
     }
 
     run(message, args) {
