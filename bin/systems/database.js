@@ -55,7 +55,7 @@ class DatabaseSystem extends DefaultSystem {
         //Backup, then write new db data.
         if(fs.existsSync(this._fsConv(db.getName()))) 
             fs.copyFileSync(this._fsConv(db.getName()), this._fsConv(Config.database.backupPrefix + db.getName()));
-        fs.writeFileSync(this._fsConv(db.getName()), JSON.stringify(db));
+        fs.writeFileSync(this._fsConv(db.getName()), JSON.stringify(db, null, 4));
         if(!silent)
             Utils.log("Database", `Saved ${db._name}`);
     }

@@ -232,6 +232,28 @@ class CommandProperty {
         return this;
     }
 
+    addWhitelist(type, property, exact=false) {
+        let types = ["role", "user"];
+        if(!types.includes(type)) {
+            Utils.log(`Command:${this._command}`, `:::WARNING::: Whitelist specifies property that does not exist.`);
+            return this;
+        }
+        let obj = {type: type, id: property};
+        if(type == "role")
+            obj.exact = exact;
+        this._whitelist.push(obj);
+    }
+
+    addBlacklist(type, property) {
+        let types = ["channel", "user"];
+        if(!types.includes(type)) {
+            Utils.log(`Command:${this._command}`, `:::WARNING::: Blacklist specifies property that does not exist.`);
+            return this;
+        }
+        let obj = {type: type, id: property};
+        this._blacklist.push(obj);
+    }
+
     forceWhitelist(val) {
         this._useWhitelist = val;
         return this;
