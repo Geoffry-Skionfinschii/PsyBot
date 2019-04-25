@@ -1,12 +1,13 @@
-const {DefaultCommand,CommandProperty} = require('../../templates/command');
+const {DefaultCommand,CommandProperty, CommandDetails} = require('../../templates/command');
 const {SimpleMessageResponse} = require('../../messageresponse');
 const Config = require("../../../config");
 
 class PingCommand extends DefaultCommand {
     constructor(mgr) {
         let properties = new CommandProperty("ping");
-        properties.allowDM(true).noArgs().setFixedPermissions(true);
-        properties.forceWhitelist(false);
+        properties.noArgs().setFixedPermissions(false);
+        properties.forceWhitelist(true);
+        properties.setDetails(new CommandDetails("Pings and Pongs", ""));
         super(mgr, properties);
     }
 

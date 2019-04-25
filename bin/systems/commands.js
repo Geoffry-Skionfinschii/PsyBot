@@ -3,6 +3,7 @@ const Config = require('../../config');
 const Utils = require('../util');
 const {DefaultAlias} = require('../templates/command');
 const fs = require('fs');
+const {ErrorMessageResponse} = require('../messageresponse');
 
 class CommandSystem extends DefaultSystem {
 
@@ -80,9 +81,14 @@ class CommandSystem extends DefaultSystem {
 
             let command = args[0].substr(Config.prefix.length);
             if(this._commands[command] != null) {
-                args.shift(); //We know the command name, strip it.
-                let cmdOut = this._commands[command].exec(msg, args);
-                cmdOut.generate(msg);
+                try {
+                    args.shift(); //We know the command name, strip it.
+                    let cmdOut = this._commands[command].exec(msg, args);
+                    cmdOut.generate(msg);
+                } catch (e) {
+                    Utils.log("CommandError", ":::WARNING::: Command threw error\n", e);
+                    (new ErrorMessageResponse("Command failed to execute. Contact the Admins\n```" + e + "```")).generate(msg);
+                }
             } else {
 
             }

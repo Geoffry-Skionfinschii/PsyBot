@@ -16,4 +16,19 @@ client.on("ready", () => {
 	Manager.discordOn();
 });
 
-client.login(LoginDetails);
+client.on("error", (err) => {
+	killClient();
+	startup();
+	Utils.log("DiscordClient", "Rebooting due to error\n", err);
+});
+
+function killClient() {
+	Manager.discordOff();
+	client.destroy();
+}
+
+function startup() {
+	client.login(LoginDetails);
+}
+
+startup();

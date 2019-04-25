@@ -5,7 +5,21 @@
         "maxArgLimit": "There are too many arguments",
         "permissionError": "You do not have permission to use this",
         "dmDisabled": "This command cannot be run in a DM",
+        "dmUnsupported": "DMs currently are not supported for this bot",
         "blacklistedUser": "You have been blocked from this command",
-        "unknown": "This command does not exist."
+        "unknown": "This command does not exist.",
+        "notInVC": "You must be in a voice channel for this command.",
+        "perms": {
+            "notDynamic": "This command does not use dynamic permissions.",
+            "notRole": "Roles cannot be blacklisted",
+            "notChannel": "Channels cannot be whitelisted",
+            "unknownFilter": "Unknown filter. Allowed types are `channel`, `user` and `role`\n `channel` is only allowed in blacklist, `role` is only allowed in whitelist."
+        },
+        "targets": {
+            "unknownRole": "This role/role ID is invalid",
+            "unknownUser": "This user/user ID is invalid",
+            "unknownChannel": "This channel/channel ID is invalid",
+            "unsupportedTarget": "Whatever you targetted is voodoo, and this bot ignores it."
+        }
     }
 }

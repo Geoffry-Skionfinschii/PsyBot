@@ -61,13 +61,20 @@ class DefaultCommand {
         return [false, ErrorStrings.notImplemented];
     }
 
+    getDetails() {
+        return this._properties._details;
+    }
+
     //Can be overridden, must return string error or true. False will fail without error.
     /**
      * 
      * @param {DiscordMessage} message 
-     * @param {string[]} args 
      */
-    checkProperties(message, args) {
+    checkProperties(message, args, ignoreArgs=false) {
+        //Channel type
+        if(/*!props._allowDM && */message.channel.type == "dm")
+            return ErrorStrings.dmUnsupported/*ErrorStrings.dmDisabled*/;
+
         let props = this._properties;
         //Blacklist. Blacklist only has channels and users
         let channelID = message.channel.id;
@@ -129,16 +136,13 @@ class DefaultCommand {
                 return ErrorStrings.permissionError;
         }
 
-        //Channel type
-        if(!props._allowDM && message.channel.type == "dm")
-            return ErrorStrings.dmDisabled;
-
-        //Argument Limits
-        if(props._minArgs != -1 && props._minArgs > args.length)
-            return ErrorStrings.minArgLimit;
-        if(props._maxArgs != -1 && props._maxArgs < args.length)
-            return ErrorStrings.maxArgLimit;
-        
+        if(!ignoreArgs) {
+            //Argument Limits
+            if(props._minArgs != -1 && props._minArgs > args.length)
+                return new ErrorMessageResponse(ErrorStrings.minArgLimit);
+            if(props._maxArgs != -1 && props._maxArgs < args.length) 
+                return new ErrorMessageResponse(ErrorStrings.maxArgsLimit);
+        }
         return true;
     }
 }
@@ -157,6 +161,7 @@ class DefaultAlias {
 
 class CommandProperty {
     constructor(commandName) {
+        this._details = new CommandDetails("No Description", "No Usage");
         this._command = commandName;
         this._minArgs = -1;
         this._maxArgs = -1;
@@ -197,6 +202,7 @@ class CommandProperty {
         let db = dbRet.getData();
         if(db == null) {
             this._whitelist = [];
+            this._blacklist = [];
             Utils.log(`CommandProperty ${this._command}`, "Failed to load whitelist database");
             return false;
         }
@@ -208,6 +214,15 @@ class CommandProperty {
         this._whitelist = db[this._command].whitelist;
         this._blacklist = db[this._command].blacklist;
         Utils.log(`CommandProperty ${this._command}`, "Loaded permissions data");
+    }
+
+    savePermissions(mgr) {
+        let dbSys = mgr.getSystem("Database");
+        let dbRet = dbSys.getDatabase("cmd_lists");
+        let db = dbRet.getData();
+        db[this._command] = {whitelist: this._whitelist, blacklist: this._blacklist};
+        Utils.log(`CommandProperty ${this._command}`, "Saved new permissions to database");
+        dbSys.commit(dbRet);
     }
 
     setArgs(min, max) {
@@ -223,7 +238,8 @@ class CommandProperty {
     }
 
     allowDM(dm) {
-        this._allowDM = dm;
+        //this._allowDM = dm;
+        Utils.log(`CommandProperty ${this._command}`, "Attempted to use allowDM(), this function does nothing.")
         return this;
     }
 
@@ -258,6 +274,27 @@ class CommandProperty {
         this._useWhitelist = val;
         return this;
     }
+
+    setDetails(deets) {
+        this._details = deets;
+        return this;
+    }
 }
 
-module.exports = {DefaultCommand, DefaultAlias, CommandProperty};
+class CommandDetails {
+    constructor(desc, usage) {
+        this._description = desc;
+        this._usage = usage;
+    }
+
+    getUsageFormatted(cmd) {
+        let nums = this._usage.split("\n");
+        let concat = "";
+        for(let i in nums) {
+            concat = concat + `${cmd} ${nums[i]}\n`;
+        }
+        return concat;
+    }
+}
+
+module.exports = {DefaultCommand, DefaultAlias, CommandProperty, CommandDetails};
