@@ -10,10 +10,14 @@
         "unknown": "This command does not exist.",
         "notInVC": "You must be in a voice channel for this command.",
         "perms": {
-            "notDynamic": "This command does not use dynamic permissions.",
+            "notDynamic": "This command does not use dynamic permissions. It may be an alias of the real command.",
             "notRole": "Roles cannot be blacklisted",
             "notChannel": "Channels cannot be whitelisted",
-            "unknownFilter": "Unknown filter. Allowed types are `channel`, `user` and `role`\n `channel` is only allowed in blacklist, `role` is only allowed in whitelist."
+            "unknownFilter": "Unknown filter. Allowed values are `allow` or `deny`, using `*` and `delete` as seperate commands.",
+            "invalidDeleteID": "Cannot find a permission with that ID.",
+            "IDNaN": "Specified ID did not use a valid number.",
+            "numberOutOfRange": "Specified ID number is too large for the list.",
+            "unknownCommand": "Command used as argument does not exist."
         },
         "targets": {
             "unknownRole": "This role/role ID is invalid",

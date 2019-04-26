@@ -6,8 +6,8 @@ const {RichEmbed} = require("discord.js");
 class TowerCommand extends DefaultCommand {
     constructor(mgr) {
         let properties = new CommandProperty("911");
-        properties.allowDM(true).noArgs().setFixedPermissions(true);
-        properties.forceWhitelist(false);
+        properties.allowDM(true).noArgs().setFixedPermissions(false);
+        properties.forceWhitelist(true);
         super(mgr, properties);
     }
     init() {

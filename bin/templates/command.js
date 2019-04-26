@@ -65,6 +65,14 @@ class DefaultCommand {
         return this._properties._details;
     }
 
+    getWhitelist() {
+        return this._properties._whitelist;
+    }
+
+    getBlacklist() {
+        return this._properties._blacklist;
+    }
+
     //Can be overridden, must return string error or true. False will fail without error.
     /**
      * 
@@ -257,6 +265,32 @@ class CommandProperty {
         let obj = {type: type, id: property};
         if(type == "role")
             obj.exact = exact;
+        
+        let doesInclude = false;
+        let removeID = 0;
+        for(let i in this._whitelist) {
+            let test = {type: this._whitelist[i].type, id: this._whitelist[i].id};
+            if(test.type == obj.type && test.id == obj.id) {
+                doesInclude = true;
+                removeID = i;
+                break;
+            }
+        }
+        
+        if(doesInclude) {
+            Utils.log(`Command:${this._command}`, `Attempted to add identical whitelist entry, deleting old entry...`);
+            this._whitelist.splice(removeID);
+        }
+        //Set after identical, we don't want exact and not exact to both be in whitelist
+        
+        //Check for a blacklist duplicate entry!
+        for(let i in this._blacklist) {
+            let entry = this._blacklist[i];
+            if(entry.type == obj.type && entry.id == obj.id) {
+                Utils.log(`Command:${this._command}`, `Whitelisted entry has a blacklist entry, removing...`);
+                this._blacklist.splice(i);
+            }
+        }
         this._whitelist.push(obj);
     }
 
@@ -267,7 +301,24 @@ class CommandProperty {
             return this;
         }
         let obj = {type: type, id: property};
+        if(this._blacklist.includes(obj)) {
+            Utils.log(`Command:${this._command}`, `Attempted to add identical blacklist entry`);
+            return true;
+        }
+        //Check for a whitelist duplicate entry!
+        for(let i in this._whitelist) {
+            let entry = this._whitelist[i];
+            if(entry.type == obj.type && entry.id == obj.id) {
+                Utils.log(`Command:${this._command}`, `Blacklisted entry has a whitelist entry, removing...`);
+                this._whitelist.splice(i);
+            }
+        }
         this._blacklist.push(obj);
+    }
+
+    resetPermissions() {
+        this._whitelist = [];
+        this._blacklist = [];
     }
 
     forceWhitelist(val) {
