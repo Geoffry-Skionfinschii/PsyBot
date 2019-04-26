@@ -47,7 +47,7 @@ class DatabaseSystem extends DefaultSystem {
 
     _saveAll() {
         for(let store in this._database) {
-            this._save(this._database[store]);
+            this._save(this._database[store], true);
         }
     }
 
