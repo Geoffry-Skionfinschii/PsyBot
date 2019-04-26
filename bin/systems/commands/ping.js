@@ -1,13 +1,13 @@
 const {DefaultCommand,CommandProperty, CommandDetails} = require('../../templates/command');
-const {SimpleMessageResponse} = require('../../messageresponse');
+const {ReactMessageResponse} = require('../../messageresponse');
 const Config = require("../../../config");
 
 class PingCommand extends DefaultCommand {
     constructor(mgr) {
         let properties = new CommandProperty("ping");
         properties.noArgs().setFixedPermissions(false);
-        properties.forceWhitelist(true);
-        properties.setDetails(new CommandDetails("Pings and Pongs", ""));
+        properties.forceWhitelist(false);
+        properties.setDetails(new CommandDetails("You ping, it does a reaction.", ""));
         super(mgr, properties);
     }
 
@@ -15,7 +15,7 @@ class PingCommand extends DefaultCommand {
     }
 
     run(message, args) {
-        return new SimpleMessageResponse("Pong");
+        return new ReactMessageResponse(":psycooperative:568319073650475020");
     }
 }
 

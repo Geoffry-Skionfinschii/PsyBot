@@ -141,6 +141,10 @@ class PermCommand extends DefaultCommand {
             blkStr += `${i}) ${permList.b[i].type} -> ${permList.b[i].id}\n`
         }
         rich.addField("Blacklist", `\`${blkStr}\``)
+
+        let allowed = command.checkProperties(message, null, true);
+        rich.setColor(allowed == true ? 0x00FF00 : 0xAA5533);
+        rich.setFooter(allowed == true ? "You can use this command" : "You cannot use this command");
         return new SimpleMessageResponse(rich);
     }
 
@@ -239,12 +243,15 @@ class PermCommand extends DefaultCommand {
         if(this._cmdSys._commands[args[0]] == null) {
             return new ErrorMessageResponse(ErrorStrings.unknownCommand);
         }
+        if(args[1] == null) {
+            if(!this._dynamicCmds.includes(args[0]))
+            (new ErrorMessageResponse(ErrorStrings.notDynamic)).generate(message);
+            return this._showPermissions(args, message);
+        }
         if(!this._dynamicCmds.includes(args[0])) {
             return new ErrorMessageResponse(ErrorStrings.notDynamic);
         }
-        if(args[1] == null) {
-            return this._showPermissions(args, message);
-        } else if(args[1] == "delete") {
+        if(args[1] == "delete") {
             return this._deletePermission(args, message);
         } else if (args[1] == "allow" || args[1] == "deny") {
             return this._doPermission(args, message);
