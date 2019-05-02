@@ -3,9 +3,15 @@ const {RichEmbed} = require("discord.js");
 
 /**
  * @typedef {import('discord.js').Message} DiscordMessage
+ * @typedef {import('discord.js').ReactionEmoji} ReactionEmoji
+ * @typedef {import('discord.js').Emoji} Emoji
  */
 
 class SimpleMessageResponse {
+    /**
+     * SimpleMessage sends whatever is in data to the channel
+     * @param {string | number} data 
+     */
     constructor(data) {
         this._data = data;
     }
@@ -20,6 +26,10 @@ class SimpleMessageResponse {
 }
 
 class ReactMessageResponse extends SimpleMessageResponse {
+    /**
+     * Reacts to the given message
+     * @param {ReactionEmoji | Emoji | string} data 
+     */
     constructor(data) {
         super(data);
     }
@@ -38,6 +48,9 @@ class ReactMessageResponse extends SimpleMessageResponse {
 }
 
 class NoneMessageResponse extends SimpleMessageResponse {
+    /**
+     * Does not do anything on generate
+     */
     constructor() {
         super("");
     }
@@ -47,6 +60,10 @@ class NoneMessageResponse extends SimpleMessageResponse {
 }
 
 class DMMessageResponse extends SimpleMessageResponse {
+    /**
+     * Sends the content directly to the users dm
+     * @param {string | number} data 
+     */
     constructor(data) {
         super(data)
     }
@@ -61,6 +78,10 @@ class DMMessageResponse extends SimpleMessageResponse {
 }
 
 class ErrorMessageResponse extends SimpleMessageResponse {
+    /**
+     * The text supplied will be put in a rich embed in error format
+     * @param {string | number} data 
+     */
     constructor(data) {
         super(data)
     }

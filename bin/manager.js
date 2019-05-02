@@ -6,6 +6,7 @@ const fs = require('fs');
 //Systems implement the DefaultSystem class
 /**
  * @typedef {import('discord.js').Client} DiscordClient
+ * @typedef {import('./system')} DefaultSystem
  */
 
 class Manager extends EventEmitter {
@@ -78,19 +79,31 @@ class Manager extends EventEmitter {
         this._firstAlive = false;
     }
 
+    /**
+     * Checks if the client is connected to discord or destroyed
+     * @returns {boolean} Returns true if available
+     */
     checkClientActive() {
         if(this._discordClient == null || !this._discordAlive)
             return false;
         return true;
     }
 
-    //Check if this is the first time the client has been activated.
+    /**
+     * Checks if this is the first time the client has connected to discord
+     * @returns {boolean}
+     */
     checkClientFirst() {
         if(this._firstAlive == true || this._firstAlive == null)
             return true;
         return false;
     }
 
+    /**
+     * Returns the system located by identity, or null
+     * @param {string} identity The identity the system is initialized as
+     * @returns {DefaultSystem} The system that is requested.
+     */
     getSystem(identity) {
         if(this._systems[identity] != null)
             return this._systems[identity];

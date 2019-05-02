@@ -4,6 +4,10 @@ const Config = require("../../../config");
 const ErrorStrings = require("../../../errors").commands;
 const {RichEmbed} = require('discord.js');
 
+/**
+ * @typedef {import('../commands')} CommandSystem
+ */
+
 class HelpCommand extends DefaultCommand {
     constructor(mgr) {
         let properties = new CommandProperty("help");
@@ -15,7 +19,7 @@ class HelpCommand extends DefaultCommand {
             )
         );
         super(mgr, properties);
-
+        /** @type {CommandSystem} */
         this._commandSys = null;
     }
 
@@ -23,6 +27,13 @@ class HelpCommand extends DefaultCommand {
         this._commandSys = this._manager.getSystem("Commands");
     }
 
+    /**
+     * 
+     * @template
+     * @param {DiscordMessage} message 
+     * @param {string[]} args 
+     * @returns {SimpleMessageResponse} Must return a new MessageResponse
+     */
     run(message, args) {
         if(args[0] == null) {
             let rich = new RichEmbed();

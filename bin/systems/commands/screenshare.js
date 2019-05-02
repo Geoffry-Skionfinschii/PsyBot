@@ -16,10 +16,13 @@ class ShareCommand extends DefaultCommand {
     init() {
     }
 
+    //Return a new MessageResponse.
     /**
-     * @typedef {import('discord.js').Message} DiscordMessage
+     * 
+     * @template
      * @param {DiscordMessage} message 
-     * @param {*} args 
+     * @param {string[]} args 
+     * @returns {SimpleMessageResponse} Must return a new MessageResponse
      */
     run(message, args) {
         if(message.member.voiceChannel == null) {

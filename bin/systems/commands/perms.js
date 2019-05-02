@@ -10,6 +10,7 @@ const ErrorAll = require("../../../config").commands;
 /**
  * @typedef {import('discord.js').Guild} DiscordGuild
  * @typedef {import('discord.js').Message} DiscordMessage
+ * @typedef {import('../commands')} CommandSystem
  */
 
 class PermCommand extends DefaultCommand {
@@ -34,7 +35,7 @@ class PermCommand extends DefaultCommand {
             )
         );
         super(mgr, properties);
-
+        /** @type {CommandSystem} */
         this._cmdSys = this._manager.getSystem("Commands");
         this._dynamicCmds = [];
 
@@ -233,8 +234,10 @@ class PermCommand extends DefaultCommand {
 
     /**
      * 
+     * @template
      * @param {DiscordMessage} message 
-     * @param {*} args 
+     * @param {string[]} args 
+     * @returns {SimpleMessageResponse} Must return a new MessageResponse
      */
     run(message, args) {
         if(args[0] == "*") {

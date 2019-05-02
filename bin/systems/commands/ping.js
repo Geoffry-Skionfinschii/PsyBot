@@ -13,7 +13,15 @@ class PingCommand extends DefaultCommand {
 
     init() {
     }
-
+    
+    //Return a new MessageResponse.
+    /**
+     * 
+     * @template
+     * @param {DiscordMessage} message 
+     * @param {string[]} args 
+     * @returns {SimpleMessageResponse} Must return a new MessageResponse
+     */
     run(message, args) {
         return new ReactMessageResponse(":psycooperative:568319073650475020");
     }

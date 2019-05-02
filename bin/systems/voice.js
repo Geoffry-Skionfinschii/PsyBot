@@ -6,6 +6,7 @@ const Utils = require('../util');
 /**
  * @typedef {import('discord.js').GuildMember} GuildMember
  * @typedef {import('discord.js').Guild} Guild
+ * @typedef {import('../systems/database')} Database
  */
 
 
@@ -18,8 +19,8 @@ class VoiceSystem extends DefaultSystem {
             disposeChannel: "Waiting...",
             channelPrefix: "$"
         }
-
-        this._dbSys = {};
+        /** @type {Database} */
+        this._dbSys = null;
     }
 
     init() {
@@ -34,7 +35,7 @@ class VoiceSystem extends DefaultSystem {
     }
 
     /**
-     * 
+     * Cycles through and deletes all channels starting with the prefix
      * @param {Guild} guild 
      */
     destroyAllChannels(guild) {
@@ -46,6 +47,10 @@ class VoiceSystem extends DefaultSystem {
 
 
     //Go through database and find out whats goin on.
+    /**
+     * Repeatedly scans the database and manages the channels
+     * @todo
+     */
     _checkChannels() {
         let guild = this._manager._discordClient.guilds.get("359250752813924353");
         guild.channels.forEach((chn) => {
@@ -57,7 +62,7 @@ class VoiceSystem extends DefaultSystem {
     }
 
     /**
-     * 
+     * Handles a connection event
      * @param {GuildMember} oldMember 
      * @param {GuildMember} newMember 
      */
@@ -71,8 +76,9 @@ class VoiceSystem extends DefaultSystem {
         if(newMember.voiceChannel.name == this._settings.creationChannel) {
             let chnlName = `${this._settings.channelPrefix}${newMember.nickname == null ? newMember.user.username : newMember.nickname}`;
             let newChannel = await newMember.guild.createChannel(chnlName, "voice");
+            //Must wait for each thing, otherwise discord has a hissy fit.
             await newChannel.setUserLimit(10);
-            await newChannel.setParent(newMember.voiceChannel.parent); //Need to wait for this because setposition relies on it.
+            await newChannel.setParent(newMember.voiceChannel.parent);
             await newChannel.setPosition(newChannel.parent.children.size, true);
             await newMember.setVoiceChannel(newChannel);
             

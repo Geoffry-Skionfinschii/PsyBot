@@ -1,6 +1,10 @@
 const dateFormat = require("dateformat");
 
 class Utils {
+    /**
+     * Logs anything, provide the name to display, then comma seperated similar to console.log
+     * @param {string} provClass Name to display in log
+     */
     static log(provClass) {
         if(provClass == null)
             provClass = "Unknown";

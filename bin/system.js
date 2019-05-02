@@ -15,13 +15,19 @@ class DefaultSystem {
         this._identity = systemName;
     }
 
-    //Ran before all systems are added
+    /**
+     * Ran before all systems are added to list
+     */
     preinit() {}
 
-    //Ran when all systems are added
+    /**
+     * Run after all systems have been added
+     */
     init() {}
 
-    //Ran after all systems are initialized
+    /**
+     * run after all systems have been initialized
+     */
     postinit() {}
 
 }

@@ -5,6 +5,11 @@ const {DefaultAlias} = require('../templates/command');
 const fs = require('fs');
 const {ErrorMessageResponse} = require('../messageresponse');
 
+/**
+ * @typedef {import('./database')} Database
+ * @typedef {import('discord.js').Message} DiscordMessage
+ */
+
 class CommandSystem extends DefaultSystem {
 
     constructor(client) {
@@ -15,7 +20,7 @@ class CommandSystem extends DefaultSystem {
 
     init() {
         this._manager.on("messageOther", (msg) => this.handleCommand(msg));
-
+        /** @type {Database} */
         this._dbSys = this._manager.getSystem("Database");
         this._dbSys.prepareDatabase("cmd_lists");
         this._dbSys.prepareDatabase("cmd_dynamic_alias");
@@ -51,12 +56,20 @@ class CommandSystem extends DefaultSystem {
         }
     }
 
+    /**
+     * Registers a new alias command
+     * @param {DefaultAlias} alias 
+     */
     registerAlias(alias) {
         this._commands[alias._name] = alias;
         this._commands[alias._link._name]._aliases.push(alias._name);
         Utils.log("CommandLoad", `Alias registered '${alias._link._name}' as '${alias._name}'`)
     }
 
+    /**
+     * Handles a received discord message.
+     * @param {DiscordMessage} msg 
+     */
     handleCommand(msg) {
         if(msg.content.startsWith(Config.prefix)) {
             //let regex = /"([^"]*)"|'([^']*)'|```([^`]*)```|([^ "']*[^ "'])/g; //To be used if ``` <stuff> ``` is ever needed

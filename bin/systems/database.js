@@ -21,6 +21,10 @@ class DatabaseSystem extends DefaultSystem {
     }
 
     //Database must be prepared before use. Will create a new database if not exist or corrupt
+    /**
+     * Prepares database for use, loads backups if corrupt and creates if it does not exist
+     * @param {string} table Table Name/Identity 
+     */
     prepareDatabase(table) {
         if(this._database[table] == null) {
             let ret = this._load(table);
@@ -31,12 +35,21 @@ class DatabaseSystem extends DefaultSystem {
         }
     }
 
+    /**
+     * 
+     * @param {string} table Table Name
+     * @returns {DatabaseStore} Database Object
+     */
     getDatabase(table) {
         if(this._database[table] != null)
             return this._database[table]; //May be null, or the data.
         return null;
     }
 
+    /**
+     * 
+     * @param {DatabaseStore} table Database Table to Save
+     */
     commit(table) {
         this._save(table);
     }
@@ -106,6 +119,11 @@ class DatabaseSystem extends DefaultSystem {
         return null;
     }
 
+    /**
+     * 
+     * @param {string} file
+     * @returns {string} 
+     */
     _readFile(file) {
         return fs.readFileSync(file, {encoding: 'utf8'});
     }

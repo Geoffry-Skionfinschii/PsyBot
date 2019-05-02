@@ -1,12 +1,13 @@
 const Config = require("../../config");
 const ErrorStrings = require("../../errors").commands;
 const Utils = require("../util");
-const {ErrorMessageResponse, NoneMessageResponse} = require('../messageresponse');
+const {SimpleMessageResponse, ErrorMessageResponse, NoneMessageResponse} = require('../messageresponse');
 
 //JSDocs
 /**
  * @typedef {import('discord.js').Message} DiscordMessage
  * @typedef {import('../manager')} Manager
+ * @typedef {import('../systems/database')} Database 
  */
 
 class DefaultCommand {
@@ -36,9 +37,10 @@ class DefaultCommand {
 
     //DO NOT OVERRIDE
     /**
-     * 
+     * Executes the command
      * @param {DiscordMessage} message 
      * @param {string[]} args 
+     * @returns {SimpleMessageResponse}
      */
     exec(message, args) {
         let resp = this.checkProperties(message, args);
@@ -54,11 +56,13 @@ class DefaultCommand {
     //Return a new MessageResponse.
     /**
      * 
+     * @template
      * @param {DiscordMessage} message 
      * @param {string[]} args 
+     * @returns {SimpleMessageResponse} Must return a new MessageResponse
      */
     run(message, args) {
-        return [false, ErrorStrings.notImplemented];
+        return new ErrorMessageResponse("Not Implemented: Run()");
     }
 
     getDetails() {
@@ -75,8 +79,10 @@ class DefaultCommand {
 
     //Can be overridden, must return string error or true. False will fail without error.
     /**
-     * 
+     * Checks whether a user/message is allowed to run.
      * @param {DiscordMessage} message 
+     * @param {string[]} args Can be null if ignoreArgs is true
+     * @param {boolean} ignoreArgs If this is true, args is not required and will only check the user permissions.
      */
     checkProperties(message, args, ignoreArgs=false) {
         //Channel type
@@ -156,12 +162,23 @@ class DefaultCommand {
 }
 
 class DefaultAlias {
+    /**
+     * 
+     * @param {string} name 
+     * @param {DefaultCommand} link 
+     */
     constructor(name, link) {
         this._name = name;
         this._isAlias = true;
         this._link = link;
     }
 
+    /**
+     * Executes the linked command
+     * @param {DiscordMessage} message 
+     * @param {string[]} args 
+     * @returns {SimpleMessageResponse}
+     */
     exec(message, args) {
         return this._link.exec(message, args);
     }
@@ -195,7 +212,9 @@ class CommandProperty {
             If exact is false, if the user has a higher role, they will be able to use the commands.
         */
         //If this._fixedPermissions is false, this will be used as a default, then immediately overwritten.
-        this._whitelist = [{type: "user", id: Config.owner}];
+        /** @type {{type: string, id: string}[]} */
+        this._whitelist = [];
+        /** @type {{type: string, id: string}[]} */
         this._blacklist = [];
 
         //this._useWhitelist:
@@ -204,7 +223,12 @@ class CommandProperty {
         this._useWhitelist = true;
     }
 
+    /**
+     * Updates the permissions of the command from database
+     * @param {Manager} mgr 
+     */
     _updatePermissions(mgr) {
+        /**@type {Database} */
         let dbSys = mgr.getSystem("Database");
         let dbRet = dbSys.getDatabase("cmd_lists");
         let db = dbRet.getData();
@@ -224,7 +248,13 @@ class CommandProperty {
         Utils.log(`CommandProperty ${this._command}`, "Loaded permissions data");
     }
 
+
+    /**
+     * Saves updated permissions from memory to database
+     * @param {Manager} mgr
+     */
     savePermissions(mgr) {
+        /** @type {Database} */
         let dbSys = mgr.getSystem("Database");
         let dbRet = dbSys.getDatabase("cmd_lists");
         let db = dbRet.getData();
@@ -233,29 +263,57 @@ class CommandProperty {
         dbSys.commit(dbRet);
     }
 
+    /**
+     * Sets argument minimum and maximum (-1 for no check)
+     * @param {number} min 
+     * @param {number} max 
+     * @returns {CommandProperty}
+     */
     setArgs(min, max) {
         this._minArgs = min;
         this._maxArgs = max;
         return this;
     }
 
+    /**
+     * No argument limits exist.
+     * @returns {CommandProperty}
+     */
     noArgs() {
         this._minArgs = -1;
         this._maxArgs = -1;
         return this;
     }
 
+    /**
+     * Sets whether this command will work in DM
+     * @deprecated
+     * @param {boolean} dm
+     * @returns {CommandProperty}
+     */
     allowDM(dm) {
         //this._allowDM = dm;
         Utils.log(`CommandProperty ${this._command}`, "Attempted to use allowDM(), this function does nothing.")
         return this;
     }
 
+    /**
+     * Sets whether to use the database for permissions
+     * @param {boolean} val
+     * @returns {CommandProperty} 
+     */
     setFixedPermissions(val) {
         this._fixedPermissions = val;
         return this;
     }
 
+    /**
+     * Adds a new entry to the whitelist
+     * @param {'role' | 'user'} type 
+     * @param {string} property 
+     * @param {boolean} exact If the type is 'role', exact means the user MUST have the role to use the command. Otherwise the user must just be above the role.
+     * @returns {CommandProperty}
+     */
     addWhitelist(type, property, exact=false) {
         let types = ["role", "user"];
         if(!types.includes(type)) {
@@ -294,6 +352,12 @@ class CommandProperty {
         this._whitelist.push(obj);
     }
 
+    /**
+     * Adds a new entry to the whitelist
+     * @param {'channel' | 'user'} type 
+     * @param {string} property 
+     * @returns {CommandProperty}
+     */
     addBlacklist(type, property) {
         let types = ["channel", "user"];
         if(!types.includes(type)) {
@@ -316,16 +380,29 @@ class CommandProperty {
         this._blacklist.push(obj);
     }
 
+    /**
+     * Resets the permission lists. DOES NOT SAVE TO DATABASE
+     */
     resetPermissions() {
         this._whitelist = [];
         this._blacklist = [];
     }
 
+    /**
+     * If false, the whitelist is ignored.
+     * @param {boolean} val 
+     * @returns {CommandProperty}
+     */
     forceWhitelist(val) {
         this._useWhitelist = val;
         return this;
     }
 
+    /**
+     * 
+     * @param {CommandDetails} deets 
+     * @returns {CommandProperty}
+     */
     setDetails(deets) {
         this._details = deets;
         return this;
@@ -338,6 +415,10 @@ class CommandDetails {
         this._usage = usage;
     }
 
+    /**
+     * Returns a formatted version of the usage(s).
+     * @param {string} cmd The name of the command
+     */
     getUsageFormatted(cmd) {
         let nums = this._usage.split("\n");
         let concat = "";
