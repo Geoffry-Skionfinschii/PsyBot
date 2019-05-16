@@ -55,8 +55,6 @@ class DefaultCommand {
     //User defined.
     //Return a new MessageResponse.
     /**
-     * 
-     * @template
      * @param {DiscordMessage} message 
      * @param {string[]} args 
      * @returns {SimpleMessageResponse} Must return a new MessageResponse
@@ -153,9 +151,9 @@ class DefaultCommand {
         if(!ignoreArgs) {
             //Argument Limits
             if(props._minArgs != -1 && props._minArgs > args.length)
-                return new ErrorMessageResponse(ErrorStrings.minArgLimit);
+                return ErrorStrings.minArgLimit;
             if(props._maxArgs != -1 && props._maxArgs < args.length) 
-                return new ErrorMessageResponse(ErrorStrings.maxArgsLimit);
+                return ErrorStrings.maxArgLimit;
         }
         return true;
     }
@@ -429,4 +427,9 @@ class CommandDetails {
     }
 }
 
-module.exports = {DefaultCommand, DefaultAlias, CommandProperty, CommandDetails};
+module.exports = {
+    DefaultCommand, 
+    DefaultAlias, 
+    CommandProperty, 
+    CommandDetails
+};

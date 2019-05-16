@@ -19,7 +19,15 @@ class Utils {
         arguments.length = arguments.length - 1;
 
 		console.log(...arguments);
-	}
+    }
+    
+    /**
+     * Strips the \<>@#&! letters from a string, as these are used in discord messages as the underlying mentions.
+     * @param {string} content 
+     */
+    static stripHeaderFromType(content) {
+        return content.replace(/[\\<>@#&!]/g, "");
+    }
 }
 
 module.exports = Utils;

@@ -1,7 +1,7 @@
 const DefaultSystem = require('../system');
 const Config = require('../../config');
 const Utils = require('../util');
-const {DefaultAlias} = require('../templates/command');
+const {DefaultAlias, DefaultCommand} = require('../templates/command');
 const fs = require('fs');
 const {ErrorMessageResponse} = require('../messageresponse');
 
@@ -14,6 +14,8 @@ class CommandSystem extends DefaultSystem {
 
     constructor(client) {
         super(client, "Commands");
+
+        /** @type {{cmd: DefaultCommand}} */
         this._commands = {};
         this._dbSys = null;
     }

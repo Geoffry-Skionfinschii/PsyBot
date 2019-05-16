@@ -14,11 +14,8 @@ class VoiceSystem extends DefaultSystem {
     constructor(client) {
         super(client, "Voice");
 
-        this._settings = {
-            creationChannel: "[Join to Create]",
-            disposeChannel: "Waiting...",
-            channelPrefix: "$"
-        }
+        this._settings = Config.voiceSystem;
+           
         /** @type {Database} */
         this._dbSys = null;
     }
@@ -55,7 +52,7 @@ class VoiceSystem extends DefaultSystem {
         let guild = this._manager._discordClient.guilds.get("359250752813924353");
         guild.channels.forEach((chn) => {
             if(chn.type == "voice" && chn.name.startsWith(this._settings.channelPrefix)) {
-                if(chn.members.size == 0)
+                if(chn.members.size == 0 && chn.createdAt.getTime() < Date.now() + 60000)
                     chn.delete();
             }
         });
@@ -75,11 +72,19 @@ class VoiceSystem extends DefaultSystem {
         //Name must match name defined in settings. Now we create the channel :D
         if(newMember.voiceChannel.name == this._settings.creationChannel) {
             let chnlName = `${this._settings.channelPrefix}${newMember.nickname == null ? newMember.user.username : newMember.nickname}`;
-            let newChannel = await newMember.guild.createChannel(chnlName, "voice");
+            let ownedChannel = newMember.guild.channels.find('name', chnlName);
+            if(ownedChannel != null) {
+                newMember.setVoiceChannel(ownedChannel);
+                return;
+            }
+            let newChannel = await newMember.guild.createChannel(chnlName, {
+                type: "voice", 
+                parent: newMember.voiceChannel.parent, 
+                userLimit: 10, 
+                //position: newChannel.parent.children.size
+            });
             //Must wait for each thing, otherwise discord has a hissy fit.
-            await newChannel.setUserLimit(10);
-            await newChannel.setParent(newMember.voiceChannel.parent);
-            await newChannel.setPosition(newChannel.parent.children.size, true);
+            //await newChannel.lockPermissions();
             await newMember.setVoiceChannel(newChannel);
             
         }

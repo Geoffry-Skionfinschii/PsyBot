@@ -70,7 +70,7 @@ class PermCommand extends DefaultCommand {
         }
         //Mentions will have @, @& or #. Get 'user' 'role' or 'channel'
         let targetType = this.getTypeFromMention(args[2]);
-        let targetID = args[2].replace(/[\\<>@#&!]/g, "");
+        let targetID = Utils.stripHeaderFromType(args[2]);
         if(this._idToName(targetType, targetID, message.guild) == null)
             targetType = false;
         if(targetType == false) {
@@ -136,12 +136,12 @@ class PermCommand extends DefaultCommand {
                 whiteStr += `, ${permList.w[i].exact == true ? 'exact' : 'above'}`;
             whiteStr += "\n";
         }
-        rich.addField("Whitelist", `\`${whiteStr}\``)
+        rich.addField("Whitelist", `\`${(whiteStr.length > 2) ? whiteStr : "No whitelist entries."}\``)
         let blkStr = "";
         for(let i in permList.b) {
             blkStr += `${i}) ${permList.b[i].type} -> ${permList.b[i].id}\n`
         }
-        rich.addField("Blacklist", `\`${blkStr}\``)
+        rich.addField("Blacklist", `\`${(blkStr.length > 2) ? blkStr : "No blacklist entries."}\``)
 
         let allowed = command.checkProperties(message, null, true);
         rich.setColor(allowed == true ? 0x00FF00 : 0xAA5533);
@@ -150,6 +150,7 @@ class PermCommand extends DefaultCommand {
     }
 
     _deletePermission(args, message) {
+        /** @type {DefaultCommand} */
         let command = this._cmdSys._commands[args[0]];
         if(args[2] == "*") {
             command._properties.resetPermissions();
@@ -163,12 +164,12 @@ class PermCommand extends DefaultCommand {
                 if(num > command._properties._whitelist.length - 1)
                     return new ErrorMessageResponse(ErrorStrings.numberOutOfRange);
 
-                command._properties._whitelist.splice(num);
+                command._properties._whitelist.splice(num, 1);
             } else if(args[2].startsWith("B")) {
                 if(num > command._properties._blacklist.length - 1)
                     return new ErrorMessageResponse(ErrorStrings.numberOutOfRange);
 
-                command._properties._blacklist.splice(num);
+                command._properties._blacklist.splice(num, 1);
             } else {
                 return new ErrorMessageResponse(ErrorStrings.invalidDeleteID);
             }
@@ -234,7 +235,6 @@ class PermCommand extends DefaultCommand {
 
     /**
      * 
-     * @template
      * @param {DiscordMessage} message 
      * @param {string[]} args 
      * @returns {SimpleMessageResponse} Must return a new MessageResponse
@@ -243,7 +243,7 @@ class PermCommand extends DefaultCommand {
         if(args[0] == "*") {
             return this._listDynamics();
         } 
-        if(this._cmdSys._commands[args[0]] == null) {
+        if(args[0] == null || this._cmdSys._commands[args[0]] == null) {
             return new ErrorMessageResponse(ErrorStrings.unknownCommand);
         }
         if(args[1] == null) {

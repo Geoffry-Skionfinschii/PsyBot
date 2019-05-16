@@ -6,5 +6,11 @@
     },
     "owner": "139325032932311040",
     "prefix": ">",
-    "defaultReact": "✅"
+    "defaultReact": "✅",
+    "voiceSystem": {
+        "creationChannel": "[Join to Create]",
+        "disposeChannel": "Waiting...",
+        "channelPrefix": "$",
+        "rolePrefix": "__"
+    }
 }

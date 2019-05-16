@@ -23,6 +23,7 @@
             "unknownRole": "This role/role ID is invalid",
             "unknownUser": "This user/user ID is invalid",
             "unknownChannel": "This channel/channel ID is invalid",
+            "unknownCategory": "This category/category ID is invalid",
             "unsupportedTarget": "Whatever you targetted is voodoo, and this bot ignores it."
         }
     }
