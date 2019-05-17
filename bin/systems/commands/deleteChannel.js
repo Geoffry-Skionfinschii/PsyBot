@@ -69,8 +69,8 @@ class DelChannelCommand extends DefaultCommand {
         for(let i=0; i<children.length; i++) {
             await children[i].delete();
         }
-        channel.delete();
-        role.delete();
+        await channel.delete();
+        await role.delete();
     }
 }
 

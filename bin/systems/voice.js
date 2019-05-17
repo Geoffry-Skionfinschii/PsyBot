@@ -24,6 +24,7 @@ class VoiceSystem extends DefaultSystem {
         this._manager._timerManager.addGlobalTimer(10 * 1000, () => this._checkChannels());
         this._dbSys = this._manager.getSystem("Database");
         this._dbSys.prepareDatabase("voice_channels");
+        this._dbSys.prepareDatabase("voice_user_settings");
 
         this._manager.on('voiceStateUpdate', (oldMember, newMember) => this._handleConnect(oldMember, newMember));
     }
@@ -52,8 +53,13 @@ class VoiceSystem extends DefaultSystem {
         let guild = this._manager._discordClient.guilds.get("359250752813924353");
         guild.channels.forEach((chn) => {
             if(chn.type == "voice" && chn.name.startsWith(this._settings.channelPrefix)) {
-                if(chn.members.size == 0 && chn.createdAt.getTime() < Date.now() + 60000)
+                let db = this._dbSys.getDatabase('voice_channels')
+                let dat = db.getData()[chn.id];
+                if(chn.members.size == 0 && (dat == null || Date.now() > dat.expiration)) {
                     chn.delete();
+                    delete db.getData()[chn.id]
+                    this._dbSys.commit(db);
+                }
             }
         });
     }
@@ -71,18 +77,39 @@ class VoiceSystem extends DefaultSystem {
 
         //Name must match name defined in settings. Now we create the channel :D
         if(newMember.voiceChannel.name == this._settings.creationChannel) {
-            let chnlName = `${this._settings.channelPrefix}${newMember.nickname == null ? newMember.user.username : newMember.nickname}`;
-            let ownedChannel = newMember.guild.channels.find('name', chnlName);
+            let settingdb = this._dbSys.getDatabase('voice_user_settings');
+            let settingstable = settingdb.getData();
+            let userSettings = settingstable[newMember.id];
+            if(userSettings == null) {
+                userSettings = {uLimit: 10, password: "", bitrate: 64, name: newMember.nickname == null ? newMember.user.username : newMember.nickname}
+                settingstable[newMember.id] = userSettings;
+                this._dbSys.commit(settingdb);
+            }
+            let chnlName = `${this._settings.channelPrefix}${userSettings.name}`;
+
+            let ownedChannel = newMember.guild.channels.find(val => val.name == chnlName);
             if(ownedChannel != null) {
+                if(ownedChannel.parentID != newMember.voiceChannel.parentID) {
+                    await ownedChannel.setParent(newMember.voiceChannel.parent);
+                    await ownedChannel.lockPermissions();
+                }
                 newMember.setVoiceChannel(ownedChannel);
                 return;
             }
+
             let newChannel = await newMember.guild.createChannel(chnlName, {
                 type: "voice", 
                 parent: newMember.voiceChannel.parent, 
-                userLimit: 10, 
+                userLimit: userSettings.uLimit,
+                bitrate: userSettings.bitrate * 1000, 
                 //position: newChannel.parent.children.size
             });
+
+            let db = this._dbSys.getDatabase('voice_channels');
+            let table = db.getData();
+            table[newChannel.id] = {owner: newMember.id, expiration: Date.now() + (this._settings.defaultOwnershipHours * 60 * 60 * 1000)};
+            this._dbSys.commit(db);
+
             //Must wait for each thing, otherwise discord has a hissy fit.
             //await newChannel.lockPermissions();
             await newMember.setVoiceChannel(newChannel);

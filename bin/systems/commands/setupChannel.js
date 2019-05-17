@@ -71,10 +71,10 @@ class ChannelCommand extends DefaultCommand {
     async _generateChannels(channels, name, guild, JTC) {
         let newRole = await guild.createRole({name: Config.voiceSystem.rolePrefix + name, mentionable: false}, "Setup of new channels");
         let category = await guild.createChannel(name, {type: 'category'})
-        category.overwritePermissions(guild.defaultRole, {
+        await category.overwritePermissions(guild.defaultRole, {
             VIEW_CHANNEL: false,
         })
-        category.overwritePermissions(newRole, {
+        await category.overwritePermissions(newRole, {
             VIEW_CHANNEL: true
         })
 
@@ -112,7 +112,7 @@ class ChannelSetupType {
      * @param {Role} role
      */
     async create(category, guild, role) {
-        let channel = await guild.createChannel(this._name, {type: this._type, parent: category});
+        await guild.createChannel(this._name, {type: this._type, parent: category});
     }
 }
 

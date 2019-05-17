@@ -18,8 +18,8 @@ client.on("ready", () => {
 
 client.on("error", (err) => {
 	killClient();
-	startup();
 	Utils.log("DiscordClient", "Rebooting due to error\n", err);
+	setTimeout(() => startup(), 10000)
 });
 
 function killClient() {

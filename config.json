@@ -11,6 +11,7 @@
         "creationChannel": "[Join to Create]",
         "disposeChannel": "Waiting...",
         "channelPrefix": "$",
-        "rolePrefix": "__"
+        "rolePrefix": "__",
+        "defaultOwnershipHours": 0.5
     }
 }
