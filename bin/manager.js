@@ -84,7 +84,7 @@ class Manager extends EventEmitter {
      * @returns {boolean} Returns true if available
      */
     checkClientActive() {
-        if(this._discordClient == null || !this._discordAlive)
+        if(this._discordClient == null/* || !this._discordAlive*/)
             return false;
         return true;
     }
