@@ -12,6 +12,7 @@
         "disposeChannel": "Waiting...",
         "channelPrefix": "$",
         "rolePrefix": "__",
-        "defaultOwnershipHours": 0.5
+        "defaultOwnershipHours": 0.5,
+        "passwordChannelPrefix": "🔒"
     }
 }
