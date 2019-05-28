@@ -19,7 +19,7 @@ class VoiceSystem extends DefaultSystem {
         /** @type {Database} */
         this._dbSys = null;
 
-        //This list contains users waiting to enter password (to be detected via PM)
+        //This list contains users waiting to enter password (to be detected via PM).
         /** @type {{userid: channelid}} */
         this._waitingForPassword = {};
         
@@ -54,7 +54,15 @@ class VoiceSystem extends DefaultSystem {
     }
 
     getDefaultSettings(member) {
-        return {uLimit: 10, password: "", bitrate: 64, name: member.nickname == null ? member.user.username : member.nickname}
+        return {uLimit: 10, 
+            password: "", 
+            bitrate: 64, 
+            name: member.nickname == null ? member.user.username : member.nickname, 
+            ownerTime: this._settings.defaultOwnershipHours}
+    }
+
+    addHandleSetPassword(member, channel) {
+        this._waitingForPassword[member.user.id] = {member: member, vc: channel, type: "set"};
     }
 
     /**
@@ -76,13 +84,34 @@ class VoiceSystem extends DefaultSystem {
         if(channeltable[userCheck.vc.id] == null)
             return;
 
-        let channelPassword = settingstable[channeltable[userCheck.vc.id].owner].password;
-        if(message.content == channelPassword) {
-            userCheck.member.setVoiceChannel(userCheck.vc);
+        if(userCheck.type == "join") {
+
+            let channelPassword = settingstable[channeltable[userCheck.vc.id].owner].password;
+            if(message.content == channelPassword) {
+                if(userCheck.member.voiceChannel != null)
+                    userCheck.member.setVoiceChannel(userCheck.vc);
+                delete this._waitingForPassword[message.author.id];
+                this._authorisedUsers.push({user: userCheck.member.id, channel: userCheck.vc.id});
+                message.channel.send("You have been authorised to join " + userCheck.vc.name);
+            } else {
+                message.channel.send("Sorry that password does not seem to be correct.");
+            }
+        } else if (userCheck.type == "set") {
+            let newPw = message.content == "?" ? "" : message.content;
             delete this._waitingForPassword[message.author.id];
-            this._authorisedUsers.push({user: userCheck.member.id, channel: userCheck.vc.id})
-        } else {
-            message.channel.send("Sorry that password does not seem to be correct.");
+            settingstable[userCheck.member.id].password = newPw;
+            if(userCheck.vc != null) {
+                this.setChannelName(userCheck.vc, settingstable[userCheck.member.id].name, newPw.length > 0);
+                for(let i=this._authorisedUsers.length - 1; i>=0; i--) {
+                    let dat = this._authorisedUsers[i];
+                    if(dat.channel == userCheck.vc.id)
+                        delete this._authorisedUsers[i];
+                }
+            }
+            this._dbSys.commit(settingdb);
+            message.channel.send("Successfully set the password to `" + newPw + "` (This message will be deleted shortly)").then((msg) => {
+                setTimeout(() => msg.delete(), 5000);
+            });
         }
     }
 
@@ -148,7 +177,7 @@ class VoiceSystem extends DefaultSystem {
                 //position: newChannel.parent.children.size
             });
 
-            channeltable[newChannel.id] = {owner: member.id, expiration: Date.now() + (this._settings.defaultOwnershipHours * 60 * 60 * 1000)};
+            channeltable[newChannel.id] = {owner: member.id, expiration: Date.now() + (userSettings.ownerTime * 60 * 60 * 1000)};
             this._dbSys.commit(channeldb);
 
             //Must wait for each thing, otherwise discord has a hissy fit.
@@ -192,7 +221,7 @@ class VoiceSystem extends DefaultSystem {
         }
         
         //Handle password
-        this._waitingForPassword[member.user.id] = {member: member, vc: member.voiceChannel};
+        this._waitingForPassword[member.user.id] = {member: member, vc: member.voiceChannel, type: "join"};
         let waitChannel = member.guild.channels.find((val) => val.type == "voice" && val.name == this._settings.disposeChannel);
         if(waitChannel == null) {
             member.setVoiceChannel(null);

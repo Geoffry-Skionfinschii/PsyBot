@@ -1,5 +1,5 @@
 const {DefaultCommand,CommandProperty, CommandDetails} = require('../../templates/command');
-const {SimpleMessageResponse, ErrorMessageResponse, ReactMessageResponse} = require('../../messageresponse');
+const {SimpleMessageResponse, ErrorMessageResponse, ReactMessageResponse, DMMessageResponse} = require('../../messageresponse');
 const Config = require("../../../config");
 
 /**
@@ -16,7 +16,7 @@ class PingCommand extends DefaultCommand {
         properties.setDetails(new CommandDetails(
             "Allows you to edit your JTC channel. Empty VALUE will revert to default." +
             "\nValid Properties are: `name, users, password, bitrate` and also `delete`" +
-            "\n`name`: Max length of 15 chars, will change your channel name. Set to '' to reset" +
+            "\n`name`: Max length of 20 chars, will change your channel name. Set to '' to reset" +
             "\n`users`: Changes max users allowed to connect (0 to 99)" +
             "\n`password`: Sets channel password to connect. Max length of 40. If you do not specify the value, the bot will PM you and ask you to send it the password." +
             "\n`bitrate`: Sets channel bitrate (number between 8 and 96)", //TODO 
@@ -68,7 +68,16 @@ class PingCommand extends DefaultCommand {
                 userSettings.uLimit = num;
             break;
             case "password":
-                return new SimpleMessageResponse("This feature has not been implemented with a command yet. Contact Geoff to have your password set manually.");
+                if(args[1] != null && args[1].length == 0) {
+                    userSettings.password = "";
+                    if(!uCNull)
+                        this._voiceSys.setChannelName(userChannel, userSettings.name, userSettings.password.length > 0);
+                    return new ReactMessageResponse();
+                } else {
+                    this._voiceSys.addHandleSetPassword(message.member, userChannel);
+                    return new DMMessageResponse("You are setting the password for your channel. Reply with new password" + 
+                    "\nPlease note passwords ARE stored plaintext. Please use new passwords and don't make them anything important.\n\nReply with ? to remove password.");
+                }
             break;
             case "bitrate":
                 num = parseInt(args[1]);
@@ -79,7 +88,7 @@ class PingCommand extends DefaultCommand {
                 userSettings.bitrate = num;
             break;
             case "name":
-                if(args[1].length > 15)
+                if(args[1].length > 20)
                     return new ErrorMessageResponse("Property `name` must be less than 15 chars.")
                 let newName = args[1]
                 if(args[1].length == 0) 
@@ -96,7 +105,7 @@ class PingCommand extends DefaultCommand {
                 }
             break;
             default:
-                return new ErrorMessageResponse("Unknown Property. Properties are `name`, `bitrate`, `users` and `password`");
+                return new ErrorMessageResponse("Unknown Property. Properties are `name`, `bitrate`, `users`, `password` or `delete`");
             break;
         }
 
