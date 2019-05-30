@@ -1,4 +1,4 @@
-{
+module.exports = {
     "commands": {
         "notImplemented": "Not Implemented",
         "minArgLimit": "There is not enough arguments",

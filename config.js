@@ -1,4 +1,4 @@
-{
+module.exports = {
     "database": {
         "storageDir": "./database/",
         "saveDelay": 60,
@@ -11,8 +11,11 @@
         "creationChannel": "[Join to Create]",
         "disposeChannel": "Waiting...",
         "channelPrefix": "$",
-        "rolePrefix": "__",
+        "rolePrefix": "$$",
         "defaultOwnershipHours": 0.5,
         "passwordChannelPrefix": "🔒"
+    },
+    "gameSystem": {
+        "rolePrefix": "__"
     }
 }
