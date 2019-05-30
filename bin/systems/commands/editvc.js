@@ -68,16 +68,9 @@ class PingCommand extends DefaultCommand {
                 userSettings.uLimit = num;
             break;
             case "password":
-                if(args[1] != null && args[1].length == 0) {
-                    userSettings.password = "";
-                    if(!uCNull)
-                        this._voiceSys.setChannelName(userChannel, userSettings.name, userSettings.password.length > 0);
-                    return new ReactMessageResponse();
-                } else {
-                    this._voiceSys.addHandleSetPassword(message.member, userChannel);
-                    return new DMMessageResponse("You are setting the password for your channel. Reply with new password" + 
-                    "\nPlease note passwords ARE stored plaintext. Please use new passwords and don't make them anything important.\n\nReply with ? to remove password.");
-                }
+                this._voiceSys.addHandleSetPassword(message.member, userChannel);
+                return new DMMessageResponse("You are setting the password for your channel. Reply with new password" + 
+                "\nPlease note passwords ARE stored plaintext. Please use new passwords and don't make them anything important.\n\nReply with ? to remove password.");
             break;
             case "bitrate":
                 num = parseInt(args[1]);
@@ -99,9 +92,7 @@ class PingCommand extends DefaultCommand {
             break;
             case "delete":
                 if(!uCNull) {
-                    delete channelTable[userChannel.id];
-                    userChannel.delete();
-                    this._dbSys.commit(channelDB);
+                    this._voiceSys.deleteChannel(userChannel);
                 }
             break;
             default:

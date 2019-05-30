@@ -41,7 +41,7 @@ class DelChannelCommand extends DefaultCommand {
         if(role == null) {
             return new ErrorMessageResponse(ErrorTargets.unknownRole);
         }
-        if(!role.name.startsWith("__")) {
+        if(!role.name.startsWith(Config.gameSystem.rolePrefix)) {
             return new ErrorMessageResponse("This role is not a game-based role!");
         }
         /** @type {DiscordCategoryChannel} */

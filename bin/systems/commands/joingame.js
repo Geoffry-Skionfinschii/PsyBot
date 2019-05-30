@@ -36,7 +36,7 @@ class JoinCommand extends DefaultCommand {
             let roles = message.guild.roles.array();
             for(let i=0; i<roles.length; i++) {
                 let role = roles[i];
-                if(role.name.startsWith(Config.voiceSystem.rolePrefix)) {
+                if(role.name.startsWith(Config.gameSystem.rolePrefix)) {
                     message.member.addRole(role);
                 }
             }
@@ -45,7 +45,7 @@ class JoinCommand extends DefaultCommand {
             let roles = message.guild.roles;
             let roleMention = Utils.stripHeaderFromType(args[0]);
             let role = roles.find((val) => val.id == roleMention || val.name == roleMention || val.name.substring(2) == roleMention);
-            if(role != null && role.name.startsWith(Config.voiceSystem.rolePrefix)) {
+            if(role != null && role.name.startsWith(Config.gameSystem.rolePrefix)) {
                 message.member.addRole(role);
                 return new SimpleMessageResponse(new RichEmbed().setTitle("Signed you up for " + role.name));
             } else {
@@ -66,7 +66,7 @@ class JoinCommand extends DefaultCommand {
         let str = "";
         for(let i=0; i<roles.length; i++) {
             let role = roles[i];
-            if(role.name.startsWith(Config.voiceSystem.rolePrefix)) {
+            if(role.name.startsWith(Config.gameSystem.rolePrefix)) {
                 str += `${i > 0 ? '\n' : ''}- '${role.name.substring(2)}'`;
             } else continue;
         }

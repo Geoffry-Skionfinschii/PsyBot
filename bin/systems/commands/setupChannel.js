@@ -69,7 +69,7 @@ class ChannelCommand extends DefaultCommand {
      * @param {boolean} JTC
      */
     async _generateChannels(channels, name, guild, JTC) {
-        let newRole = await guild.createRole({name: Config.voiceSystem.rolePrefix + name, mentionable: false}, "Setup of new channels");
+        let newRole = await guild.createRole({name: Config.gameSystem.rolePrefix + name, mentionable: false}, "Setup of new channels");
         let category = await guild.createChannel(name, {type: 'category'})
         await category.overwritePermissions(guild.defaultRole, {
             VIEW_CHANNEL: false,
@@ -83,7 +83,7 @@ class ChannelCommand extends DefaultCommand {
         }
 
         if(JTC) {
-            let JtcChannel = await guild.createChannel(Config.voiceSystem.creationChannel, {type: 'voice', parent: category});
+            let JtcChannel = await guild.createChannel(Config.gameSystem.creationChannel, {type: 'voice', parent: category});
             JtcChannel.overwritePermissions(guild.defaultRole, {SPEAK: false});
         }
     }

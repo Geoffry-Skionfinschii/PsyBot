@@ -13,7 +13,6 @@ const Utils = require('../util');
 class VoiceSystem extends DefaultSystem {
     constructor(client) {
         super(client, "Voice");
-
         this._settings = Config.voiceSystem;
            
         /** @type {Database} */
@@ -22,11 +21,6 @@ class VoiceSystem extends DefaultSystem {
         //This list contains users waiting to enter password (to be detected via PM).
         /** @type {{userid: channelid}} */
         this._waitingForPassword = {};
-        
-        //This list contains authorised users that can connect to the channel (until kicked)
-        //Added when password changes
-        /** @type {[{user: string, channel: string}]} */
-        this._authorisedUsers = [];
     }
 
     init() {
@@ -48,8 +42,13 @@ class VoiceSystem extends DefaultSystem {
      */
     destroyAllChannels(guild) {
         guild.channels.forEach(async (chn) => {
-            if(chn.type == "voice" && chn.name.startsWith(this._settings.channelPrefix))
+            if(chn.type == "voice" && chn.name.startsWith(this._settings.channelPrefix)) {
+                let pwRole = guild.roles.find((val) => val.name == this._settings.rolePrefix + chn.id);
+                if(pwRole != null) {
+                    await pwRole.delete();
+                }
                 await chn.delete();
+            }
         });
     }
 
@@ -63,6 +62,57 @@ class VoiceSystem extends DefaultSystem {
 
     addHandleSetPassword(member, channel) {
         this._waitingForPassword[member.user.id] = {member: member, vc: channel, type: "set"};
+    }
+
+    /**
+     * 
+     * @param {VoiceChannel} channel 
+     */
+    async deleteChannel(channel) {
+        let db = this._dbSys.getDatabase('voice_channels');
+        let chnRole = channel.guild.roles.find((val) => val.name == this._settings.rolePrefix + channel.id);
+        if(chnRole != null)
+            await chnRole.delete();
+        await channel.delete();
+        delete db.getData()[channel.id]
+        this._dbSys.commit(db);
+    }
+
+    /**
+     * @typedef {import('discord.js').VoiceChannel} VoiceChannel
+     * @param {VoiceChannel} channel 
+     * @param {string} password 
+     */
+    async setupChannelPassword(channel, password) {
+        let channeldb = this._dbSys.getDatabase("voice_channels");
+        let channeltable = channeldb.getData();
+
+        if(password.length == 0) {
+            let channelRole = channel.guild.roles.find((val) => val.name == this._settings.rolePrefix + channel.id);
+            if(channelRole != null)
+                await channelRole.delete();
+            await channel.lockPermissions();
+        } else {
+            let channelRole = channel.guild.roles.find((val) => val.name == this._settings.rolePrefix + channel.id);
+            if(channelRole == null) {
+                channelRole = await channel.guild.createRole({
+                    name: this._settings.rolePrefix + channel.id,
+                    mentionable: false
+                });
+            }
+            await channel.overwritePermissions(channel.guild.defaultRole, {
+                CONNECT: false
+            });
+            await channel.overwritePermissions(channelRole, {
+                CONNECT: true
+            })
+            //Get owner and give him the new role :D
+            let ownerID = channeltable[channel.id].owner;
+            let owner = channel.guild.member(ownerID);
+            if(owner != null) {
+                owner.addRole(channelRole);
+            }
+        }
     }
 
     /**
@@ -87,11 +137,13 @@ class VoiceSystem extends DefaultSystem {
         if(userCheck.type == "join") {
 
             let channelPassword = settingstable[channeltable[userCheck.vc.id].owner].password;
+            let channelRole = message.guild.roles.find((val) => val.name == this._settings.rolePrefix + userCheck.vc.id);
             if(message.content == channelPassword) {
                 if(userCheck.member.voiceChannel != null)
                     userCheck.member.setVoiceChannel(userCheck.vc);
                 delete this._waitingForPassword[message.author.id];
-                this._authorisedUsers.push({user: userCheck.member.id, channel: userCheck.vc.id});
+                if(channelRole != null)
+                    userCheck.member.addRole(channelRole, "Authorised to join channel");
                 message.channel.send("You have been authorised to join " + userCheck.vc.name);
             } else {
                 message.channel.send("Sorry that password does not seem to be correct.");
@@ -102,11 +154,7 @@ class VoiceSystem extends DefaultSystem {
             settingstable[userCheck.member.id].password = newPw;
             if(userCheck.vc != null) {
                 this.setChannelName(userCheck.vc, settingstable[userCheck.member.id].name, newPw.length > 0);
-                for(let i=this._authorisedUsers.length - 1; i>=0; i--) {
-                    let dat = this._authorisedUsers[i];
-                    if(dat.channel == userCheck.vc.id)
-                        delete this._authorisedUsers[i];
-                }
+                this.setupChannelPassword(userCheck.vc, newPw);
             }
             this._dbSys.commit(settingdb);
             message.channel.send("Successfully set the password to `" + newPw + "` (This message will be deleted shortly)").then((msg) => {
@@ -122,14 +170,12 @@ class VoiceSystem extends DefaultSystem {
      */
     _checkChannels() {
         let guild = this._manager._discordClient.guilds.get("359250752813924353");
-        guild.channels.forEach((chn) => {
+        guild.channels.forEach(async (chn) => {
             if(chn.type == "voice" && chn.name.startsWith(this._settings.channelPrefix)) {
                 let db = this._dbSys.getDatabase('voice_channels')
                 let dat = db.getData()[chn.id];
                 if(chn.members.size == 0 && (dat == null || Date.now() > dat.expiration)) {
-                    chn.delete();
-                    delete db.getData()[chn.id]
-                    this._dbSys.commit(db);
+                    this.deleteChannel(chn);
                 }
             }
         });
@@ -166,6 +212,7 @@ class VoiceSystem extends DefaultSystem {
             if(ownedChannel.parentID != member.voiceChannel.parentID) {
                 await ownedChannel.setParent(member.voiceChannel.parent);
                 await ownedChannel.lockPermissions();
+                await this.setupChannelPassword(ownedChannel, settingstable[member.id].password);
             }
             await member.setVoiceChannel(ownedChannel);
         } else {
@@ -174,11 +221,12 @@ class VoiceSystem extends DefaultSystem {
                 parent: member.voiceChannel.parent, 
                 userLimit: userSettings.uLimit,
                 bitrate: userSettings.bitrate * 1000, 
-                //position: newChannel.parent.children.size
             });
 
             channeltable[newChannel.id] = {owner: member.id, expiration: Date.now() + (userSettings.ownerTime * 60 * 60 * 1000)};
             this._dbSys.commit(channeldb);
+
+            await this.setupChannelPassword(newChannel, settingstable[member.id].password);
 
             //Must wait for each thing, otherwise discord has a hissy fit.
             //await newChannel.lockPermissions();
@@ -205,31 +253,6 @@ class VoiceSystem extends DefaultSystem {
                 member.setVoiceChannel(waitChannel);
             member.user.send("There was an error connecting to that voice channel. The voice channel could not be found in the database and should not exist.");
         }
-        let channelPassword = settingstable[channeltable[member.voiceChannelID].owner].password;
-        if(channelPassword == "" || channelPassword == null)
-            return; //Do nothing, they can connect
-        
-        if(channeltable[member.voiceChannelID].owner == member.id)
-            return; //They are the owner, they are authorised.
-
-        for(let i=0; i<this._authorisedUsers.length; i++) {
-            let table = this._authorisedUsers[i];
-            if(table.user == member.id && table.channel == member.voiceChannelID) {
-                //Return, user is authorised and no further action required.
-                return;
-            }
-        }
-        
-        //Handle password
-        this._waitingForPassword[member.user.id] = {member: member, vc: member.voiceChannel, type: "join"};
-        let waitChannel = member.guild.channels.find((val) => val.type == "voice" && val.name == this._settings.disposeChannel);
-        if(waitChannel == null) {
-            member.setVoiceChannel(null);
-            member.send("There was an error: Channel needs password and could not find a waiting channel to move you to.");
-        } else {
-            member.setVoiceChannel(waitChannel);
-        }
-        member.send("You have not been authorised to join this channel and it requires a password. Please reply with correct password.");
     }
 
     /**
