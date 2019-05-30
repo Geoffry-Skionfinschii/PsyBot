@@ -70,9 +70,6 @@ class VoiceSystem extends DefaultSystem {
      */
     async deleteChannel(channel) {
         let db = this._dbSys.getDatabase('voice_channels');
-        let chnRole = channel.guild.roles.find((val) => val.name == this._settings.rolePrefix + channel.id);
-        if(chnRole != null)
-            await chnRole.delete();
         await channel.delete();
         delete db.getData()[channel.id]
         this._dbSys.commit(db);
@@ -88,29 +85,20 @@ class VoiceSystem extends DefaultSystem {
         let channeltable = channeldb.getData();
 
         if(password.length == 0) {
-            let channelRole = channel.guild.roles.find((val) => val.name == this._settings.rolePrefix + channel.id);
-            if(channelRole != null)
-                await channelRole.delete();
-            await channel.lockPermissions();
+            await channel.overwritePermissions(channel.guild.defaultRole, {
+                CONNECT: true
+            })
         } else {
-            let channelRole = channel.guild.roles.find((val) => val.name == this._settings.rolePrefix + channel.id);
-            if(channelRole == null) {
-                channelRole = await channel.guild.createRole({
-                    name: this._settings.rolePrefix + channel.id,
-                    mentionable: false
-                });
-            }
             await channel.overwritePermissions(channel.guild.defaultRole, {
                 CONNECT: false
             });
-            await channel.overwritePermissions(channelRole, {
-                CONNECT: true
-            })
             //Get owner and give him the new role :D
             let ownerID = channeltable[channel.id].owner;
             let owner = channel.guild.member(ownerID);
             if(owner != null) {
-                owner.addRole(channelRole);
+                channel.overwritePermissions(owner, {
+                    CONNECT: true
+                });
             }
         }
     }
@@ -137,13 +125,11 @@ class VoiceSystem extends DefaultSystem {
         if(userCheck.type == "join") {
 
             let channelPassword = settingstable[channeltable[userCheck.vc.id].owner].password;
-            let channelRole = message.guild.roles.find((val) => val.name == this._settings.rolePrefix + userCheck.vc.id);
             if(message.content == channelPassword) {
                 if(userCheck.member.voiceChannel != null)
                     userCheck.member.setVoiceChannel(userCheck.vc);
                 delete this._waitingForPassword[message.author.id];
-                if(channelRole != null)
-                    userCheck.member.addRole(channelRole, "Authorised to join channel");
+                    userCheck.vc.overwritePermissions(usercheck.member, {CONNECT: true}, "Authorised to join channel");
                 message.channel.send("You have been authorised to join " + userCheck.vc.name);
             } else {
                 message.channel.send("Sorry that password does not seem to be correct.");
