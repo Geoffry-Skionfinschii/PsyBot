@@ -26,5 +26,8 @@ module.exports = {
             "unknownCategory": "This category/category ID is invalid",
             "unsupportedTarget": "Whatever you targetted is voodoo, and this bot ignores it."
         }
+    },
+    "scripts": {
+        "windowExists": "This window title already exists!"
     }
 }

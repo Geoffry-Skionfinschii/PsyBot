@@ -1,4 +1,7 @@
-login.json
+login.js
 node_modules
 database
 jsconfig.json
+run.sh
+botOutput.log
+.vscode
