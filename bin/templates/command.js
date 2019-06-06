@@ -2,6 +2,7 @@ const Config = require("../../config");
 const ErrorStrings = require("../../errors").commands;
 const Utils = require("../util");
 const {SimpleMessageResponse, ErrorMessageResponse, NoneMessageResponse} = require('../messageresponse');
+const {Message} = require("discord.js");
 
 //JSDocs
 /**
@@ -84,20 +85,13 @@ class DefaultCommand {
      */
     checkProperties(message, args, ignoreArgs=false) {
         //Channel type
-        if(!props._allowDM && message.channel.type == "dm")
+        let props = this._properties;
+        if(!props._allowDM && message.channel.type == "dm" && !ignoreArgs)
             return ErrorStrings.dmDisabled;
 
-        if(message.channel.type == "dm") {
-            let guild = Utils.getGuild(this._manager._discordClient);
-            let member = guild.members.find((member) => member.user.id == message.author.id);
-            if(member == null)
-                return ErrorStrings.dmCouldNotFindMember;
-            
-            message.member = member;
-            message.guild = guild;
-        }
+        
 
-        let props = this._properties;
+        
         //Blacklist. Blacklist only has channels and users
         let channelID = message.channel.id;
         let highRole = message.member.highestRole;
@@ -146,7 +140,7 @@ class DefaultCommand {
                                 isWhitelisted = true;
                             }
                         } else {
-                            let lowRole = message.guild.roles.get(entry.id);
+                            let lowRole = message.member.guild.roles.get(entry.id);
                             if (!(lowRole == null || lowRole.calculatedPosition > highRole.calculatedPosition)) {
                                 isWhitelisted = true;
                             }
@@ -170,7 +164,7 @@ class DefaultCommand {
 }
 
 class DefaultAlias {
-    /**
+    /** 
      * 
      * @param {string} name 
      * @param {DefaultCommand} link 

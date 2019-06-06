@@ -13,6 +13,7 @@ class HelpCommand extends DefaultCommand {
         let properties = new CommandProperty("help");
         properties.noArgs().setFixedPermissions(true);
         properties.forceWhitelist(false);
+        properties.allowDM(true);
         properties.setDetails(new CommandDetails(
             `Gives help for a specified command, or lists all`,
             `[command]`

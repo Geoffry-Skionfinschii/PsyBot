@@ -1,6 +1,7 @@
 const {DefaultCommand,CommandProperty, CommandDetails} = require('../../templates/command');
 const {SimpleMessageResponse, ErrorMessageResponse, ReactMessageResponse, DMMessageResponse} = require('../../messageresponse');
 const Config = require("../../../config");
+const ErrorStrings = require('../../../errors');
 
 /**
  * @typedef {import('../database')} Database
@@ -19,8 +20,8 @@ class PingCommand extends DefaultCommand {
             "\nValid Properties are: `name, users, password, bitrate` and also `delete`" +
             "\n`name`: Max length of 20 chars, will change your channel name. Set to '' to reset" +
             "\n`users`: Changes max users allowed to connect (0 to 99)" +
-            "\n`password`: Sets channel password to connect. Max length of 40. If you do not specify the value, the bot will PM you and ask you to send it the password." +
-            "\n`bitrate`: Sets channel bitrate (number between 8 and 96)", //TODO 
+            "\n`password`: Sets channel password to connect. Max length of 40. You must DM the bot." +
+            "\n`bitrate`: Sets channel bitrate (number between 8 and 96)",
             "<property> [value]"));
         super(mgr, properties);
 
@@ -55,13 +56,23 @@ class PingCommand extends DefaultCommand {
         if(userSettings == null) {
             userSettings = this._voiceSys.getDefaultSettings(message.member);   
         }
-        let userChannel = message.guild.channels.find((val) => val.type == 'voice' && channelTable[val.id] != null && channelTable[val.id].owner == message.member.id);
+        let userChannel = message.member.guild.channels.find((val) => val.type == 'voice' && channelTable[val.id] != null && channelTable[val.id].owner == message.member.id);
         let uCNull = userChannel == null;
         let num = null;
         //{uLimit: 10, password: "", bitrate: 64, name: member.nickname == null ? member.user.username : member.nickname}
-        switch(args[0]) {
+        let ret = this._setOption(args[0], args[1]);
+        if(ret != null)
+            return ret;
+
+        settingsTable[message.member.id] = userSettings;
+        this._dbSys.commit(settingsDB);
+        return new ReactMessageResponse();
+    }
+
+    _setOption(option, value) {
+        switch(option) {
             case "users":
-                num = parseInt(args[1]);
+                num = parseInt(value);
                 if(isNaN(num) || num < 0 || num > 99)
                     num = 10;
                 if(!uCNull)
@@ -69,12 +80,19 @@ class PingCommand extends DefaultCommand {
                 userSettings.uLimit = num;
             break;
             case "password":
-                this._voiceSys.addHandleSetPassword(message.member, userChannel);
-                return new DMMessageResponse("You are setting the password for your channel. Reply with new password" + 
-                "\nPlease note passwords ARE stored plaintext. Please use new passwords and don't make them anything important.\n\nReply with ? to remove password.");
+                if(message.channel.type != "dm") {
+                    new DMMessageResponse("Hello!").generate(message);
+                    return new ErrorMessageResponse(ErrorStrings.commands.editvc.passwordDM);
+                }
+                if(value == null || value.length == 0) {
+                    value = "";
+                }
+                userSettings.password = value;
+                if(!uCNull)
+                    this._voiceSys.setupChannelPassword(userChannel, value);
             break;
             case "bitrate":
-                num = parseInt(args[1]);
+                num = parseInt(value);
                 if(isNaN(num) || num < 8 || num > 96)
                     num = 64;
                 if(!uCNull)
@@ -82,10 +100,10 @@ class PingCommand extends DefaultCommand {
                 userSettings.bitrate = num;
             break;
             case "name":
-                if(args[1].length > 20)
+                if(value.length > 20)
                     return new ErrorMessageResponse("Property `name` must be less than 15 chars.")
-                let newName = args[1]
-                if(args[1].length == 0) 
+                let newName = value
+                if(value.length == 0) 
                     newName = message.member.nickname == null ? message.member.user.username : message.member.nickname;
                 if(!uCNull)
                     this._voiceSys.setChannelName(userChannel, newName, userSettings.password.length > 0);
@@ -100,10 +118,6 @@ class PingCommand extends DefaultCommand {
                 return new ErrorMessageResponse("Unknown Property. Properties are `name`, `bitrate`, `users`, `password` or `delete`");
             break;
         }
-
-        settingsTable[message.member.id] = userSettings;
-        this._dbSys.commit(settingsDB);
-        return new ReactMessageResponse();
     }
 }
 

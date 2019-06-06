@@ -10,7 +10,8 @@ class RunCommand extends DefaultCommand {
         let properties = new CommandProperty("run");
         properties.setArgs(0, 1).setFixedPermissions(false);
         properties.forceWhitelist(true);
-        properties.setDetails(new CommandDetails("Executes specified script. `.sh` is optional", "[script] [window]"));
+        properties.allowDM(true);
+        properties.setDetails(new CommandDetails("Executes specified script. `.sh` is optional", "[script]"));
         super(mgr, properties);
     }
 

@@ -152,6 +152,11 @@ class PermCommand extends DefaultCommand {
     _deletePermission(args, message) {
         /** @type {DefaultCommand} */
         let command = this._cmdSys._commands[args[0]];
+        if(args[2] == null) {
+            this._showPermissions(args, message).generate(message);
+            this._cmdSys.demandContext(message.member, this, PermCommand._contextDeletePerm, command._properties, message);
+            return new SimpleMessageResponse("Please reply the entry to delete");
+        }
         if(args[2] == "*") {
             command._properties.resetPermissions();
             command._properties.savePermissions(this._manager);
@@ -275,6 +280,39 @@ class PermCommand extends DefaultCommand {
         if(mentionStr.startsWith('#'))
             return 'channel';
         return false;
+    }
+
+    /**
+     * 
+     * @param {DiscordMessage} message 
+     * @param {CommandProperty} data 
+     */
+    static _contextDeletePerm(message, data, manager) {
+        let wasError = false;
+        let num = Number(message.content.substr(1));
+        if(num == NaN)
+            new ErrorMessageResponse(ErrorStrings.IDNaN).generate(message);
+        if(message.content.startsWith("W")) {
+            if(num > data._whitelist.length - 1)
+                new ErrorMessageResponse(ErrorStrings.numberOutOfRange).generate(message);
+
+            data._whitelist.splice(num, 1);
+        } else if(message.content.startsWith("B")) {
+            if(num > data._blacklist.length - 1)
+                new ErrorMessageResponse(ErrorStrings.numberOutOfRange).generate(message);
+
+            data._blacklist.splice(num, 1);
+        } else {
+            new ErrorMessageResponse(ErrorStrings.invalidDeleteID).generate(message);
+        }
+        if(!wasError) {
+            data.savePermissions(manager);
+            new ReactMessageResponse().generate(message);
+            return false;
+        } else {
+            new SimpleMessageResponse("Please reply with the permission to delete.");
+            return true;
+        }
     }
 }
 

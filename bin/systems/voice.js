@@ -30,7 +30,7 @@ class VoiceSystem extends DefaultSystem {
         this._dbSys.prepareDatabase("voice_user_settings");
 
         this._manager.on('voiceStateUpdate', (oldMember, newMember) => this._handleConnect(oldMember, newMember));
-        this._manager.on('messageOther', (message) => this._handlePassword(message));
+        //this._manager.on('messageOther', (message) => this._handlePassword(message));
     }
 
     postinit() {
@@ -53,15 +53,24 @@ class VoiceSystem extends DefaultSystem {
     }
 
     getDefaultSettings(member) {
-        return {uLimit: 10, 
+        return {
+            uLimit: 10, 
             password: "", 
             bitrate: 64, 
             name: member.nickname == null ? member.user.username : member.nickname, 
-            ownerTime: this._settings.defaultOwnershipHours}
+            ownerTime: this._settings.defaultOwnershipHours,
+            authorisedUsers: [],
+        };
     }
 
+    /**
+     * Used to add a dm from the bot to then set password. Now unused.
+     * @deprecated
+     * @param {*} member 
+     * @param {*} channel 
+     */
     addHandleSetPassword(member, channel) {
-        this._waitingForPassword[member.user.id] = {member: member, vc: channel, type: "set"};
+        //this._waitingForPassword[member.user.id] = {member: member, vc: channel, type: "set"};
     }
 
     /**
@@ -87,7 +96,7 @@ class VoiceSystem extends DefaultSystem {
         if(password.length == 0) {
             await channel.overwritePermissions(channel.guild.defaultRole, {
                 CONNECT: true
-            })
+            });
         } else {
             await channel.overwritePermissions(channel.guild.defaultRole, {
                 CONNECT: false
@@ -104,6 +113,7 @@ class VoiceSystem extends DefaultSystem {
     }
 
     /**
+     * @deprecated
      * @typedef {import('discord.js').Message} DiscordMessage
      * @param {DiscordMessage} message 
      */

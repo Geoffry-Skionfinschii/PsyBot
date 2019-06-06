@@ -4,6 +4,7 @@ const Utils = require('../util');
 const {DefaultAlias, DefaultCommand} = require('../templates/command');
 const fs = require('fs');
 const {ErrorMessageResponse} = require('../messageresponse');
+const {RichEmbed} = require('discord.js');
 
 /**
  * @typedef {import('./database')} Database
@@ -18,6 +19,9 @@ class CommandSystem extends DefaultSystem {
         /** @type {{cmd: DefaultCommand}} */
         this._commands = {};
         this._dbSys = null;
+
+        /** @type {{memberID: {callback: Function, expiry: Date, data: any}}} */
+        this._contextDemands = {};
     }
 
     init() {
@@ -69,10 +73,66 @@ class CommandSystem extends DefaultSystem {
     }
 
     /**
+     * Demands context, next messages will be handled by the callback. Will decay in 1 minute.
+     * @typedef {import('discord.js').GuildMember} DiscordMember
+     * @param {DiscordMember} member 
+     * @param {DefaultCommand} command 
+     * @param {Function} callback 
+     */
+    demandContext(member, command, callback, data, message) {
+        this._contextDemands[member.id] = {callback: callback, expiry: Date.now() + 60000, data: data};
+        Utils.log("CommandContext", `Registered context for ${command._name} with ${member.user.username}<${member.user.id}>`);
+        if(message != null)
+            message.react(Config.contextOn);
+    }
+
+    /** 
+     * Revokes context demand
+     * @param {DiscordMember} member
+     * @param {DefaultCommand} command
+    */
+    revokeContext(member, msg) {
+        delete this._contextDemands[member.id];
+        Utils.log("CommandContext", `Revoked context demand for ${member.user.username}`);
+        if(msg != null)
+            msg.react(Config.contextOff);
+    }
+
+    /**
      * Handles a received discord message.
      * @param {DiscordMessage} msg 
      */
     handleCommand(msg) {
+        if(msg.channel.type == "dm") {
+            let guild = Utils.getGuild(this._manager._discordClient);
+            let member = guild.members.find((member) => member.user.id == msg.author.id);
+            msg.member = member;
+            if(msg.member == null) {
+                Utils.log("HandleCommand", "Could not find member from message dm, ignoring command.");
+                msg.channel.send("Hmm, you don't seem to be in my guild. Contact Geo.");
+                return;
+            }
+        }
+        if(this._contextDemands[msg.member.id] != null) {
+            if(this._contextDemands[msg.member.id].expiry < Date.now() || msg.content.toLowerCase() == "done") {
+                if(msg.content.toLowerCase() == 'done')
+                    msg.react(Config.contextOff);
+                delete this._contextDemands[msg.member.id];
+            } else {
+                Utils.log("HandleContext", "Passed message through to context handler.");
+                let keepContext = false;
+                try {
+                    keepContext = this._contextDemands[msg.member.id].callback(msg, this._contextDemands[msg.member.id].data, this._manager);
+                } catch (e) {
+                    Utils.log("HandleContext", "Context threw an error ", e);
+                }
+                if(!keepContext) {
+                    this.revokeContext(msg.member, msg);
+                }
+                return;
+            }
+        }
+
         if(msg.content.startsWith(Config.prefix)) {
             //let regex = /"([^"]*)"|'([^']*)'|```([^`]*)```|([^ "']*[^ "'])/g; //To be used if ``` <stuff> ``` is ever needed
             let regex = /"([^"]*)"|'([^']*)'|([^ "']*[^ "'])/g;
@@ -98,6 +158,7 @@ class CommandSystem extends DefaultSystem {
             if(this._commands[command] != null) {
                 try {
                     args.shift(); //We know the command name, strip it.
+                    Utils.log("CommandExec", `${msg.author.username}<${msg.author.id}> ran ${command}${args.length > 0 ? ` with args ${args}` : ``}`);
                     let cmdOut = this._commands[command].exec(msg, args);
                     cmdOut.generate(msg);
                 } catch (e) {

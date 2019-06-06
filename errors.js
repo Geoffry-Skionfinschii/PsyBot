@@ -10,6 +10,9 @@ module.exports = {
         "blacklistedUser": "You have been blocked from this command",
         "unknown": "This command does not exist.",
         "notInVC": "You must be in a voice channel for this command.",
+        "editvc": {
+            "passwordDM": "Password command needs to be used in a DM to the bot.\nThe bot has messaged you.",
+        },
         "perms": {
             "notDynamic": "This command does not use dynamic permissions. It may be an alias of the real command.",
             "notRole": "Roles cannot be blacklisted",
