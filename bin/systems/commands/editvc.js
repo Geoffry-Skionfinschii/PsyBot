@@ -13,6 +13,7 @@ class PingCommand extends DefaultCommand {
         let properties = new CommandProperty("editvc");
         properties.setArgs(1, 2).setFixedPermissions(false);
         properties.forceWhitelist(true);
+        properties.allowDM(true);
         properties.setDetails(new CommandDetails(
             "Allows you to edit your JTC channel. Empty VALUE will revert to default." +
             "\nValid Properties are: `name, users, password, bitrate` and also `delete`" +

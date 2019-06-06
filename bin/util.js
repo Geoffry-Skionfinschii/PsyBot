@@ -1,4 +1,5 @@
 const dateFormat = require("dateformat");
+const GuildString = require("../login").guild;
 
 class Utils {
     /**
@@ -27,6 +28,17 @@ class Utils {
      */
     static stripHeaderFromType(content) {
         return content.replace(/[\\<>@#&!]/g, "");
+    }
+
+    /**
+     * Returns the discord guild that this bot is running on.
+     * @typedef {import('discord.js').Client} DiscordClient
+     * @typedef {import('discord.js').Guild} DiscordGuild
+     * @param {DiscordClient} client 
+     * @returns {DiscordGuild}
+     */
+    static getGuild(client) {
+        return client.guilds.get(GuildString);
     }
 }
 

@@ -6,6 +6,7 @@ module.exports = {
         "permissionError": "You do not have permission to use this",
         "dmDisabled": "This command cannot be run in a DM",
         "dmUnsupported": "DMs currently are not supported for this bot",
+        "dmCouldNotFindMember": "Could not find you on the guild this bot is part of!",
         "blacklistedUser": "You have been blocked from this command",
         "unknown": "This command does not exist.",
         "notInVC": "You must be in a voice channel for this command.",

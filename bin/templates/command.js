@@ -84,8 +84,18 @@ class DefaultCommand {
      */
     checkProperties(message, args, ignoreArgs=false) {
         //Channel type
-        if(/*!props._allowDM && */message.channel.type == "dm")
-            return ErrorStrings.dmUnsupported/*ErrorStrings.dmDisabled*/;
+        if(!props._allowDM && message.channel.type == "dm")
+            return ErrorStrings.dmDisabled;
+
+        if(message.channel.type == "dm") {
+            let guild = Utils.getGuild(this._manager._discordClient);
+            let member = guild.members.find((member) => member.user.id == message.author.id);
+            if(member == null)
+                return ErrorStrings.dmCouldNotFindMember;
+            
+            message.member = member;
+            message.guild = guild;
+        }
 
         let props = this._properties;
         //Blacklist. Blacklist only has channels and users
@@ -188,7 +198,7 @@ class CommandProperty {
         this._command = commandName;
         this._minArgs = -1;
         this._maxArgs = -1;
-        this._allowDM = true;
+        this._allowDM = false;
         //Fixed permissions means the permissions are not handled by the database
         this._fixedPermissions = true;
         /*Permissions have the following allowed entries:
@@ -285,13 +295,11 @@ class CommandProperty {
 
     /**
      * Sets whether this command will work in DM
-     * @deprecated
      * @param {boolean} dm
      * @returns {CommandProperty}
      */
     allowDM(dm) {
-        //this._allowDM = dm;
-        Utils.log(`CommandProperty ${this._command}`, "Attempted to use allowDM(), this function does nothing.")
+        this._allowDM = dm;
         return this;
     }
 
