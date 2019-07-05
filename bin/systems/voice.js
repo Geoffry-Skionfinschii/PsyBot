@@ -17,10 +17,6 @@ class VoiceSystem extends DefaultSystem {
            
         /** @type {Database} */
         this._dbSys = null;
-
-        //This list contains users waiting to enter password (to be detected via PM).
-        /** @type {{userid: channelid}} */
-        this._waitingForPassword = {};
     }
 
     init() {
@@ -52,6 +48,10 @@ class VoiceSystem extends DefaultSystem {
         });
     }
 
+    /**
+     * 
+     * @param {GuildMember} member 
+     */
     getDefaultSettings(member) {
         return {
             uLimit: 10, 
@@ -66,7 +66,7 @@ class VoiceSystem extends DefaultSystem {
     /**
      * Used to add a dm from the bot to then set password. Now unused.
      * @deprecated
-     * @param {*} member 
+     * @param {GuildMember} member 
      * @param {*} channel 
      */
     addHandleSetPassword(member, channel) {

@@ -19,5 +19,6 @@ module.exports = {
     },
     "gameSystem": {
         "rolePrefix": "__"
-    }
+    },
+    "armaKillboardChannel": "595777047851433984"
 }
